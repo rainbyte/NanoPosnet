@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script>
+        function generateQR() {
+            let direccion = "nano_3p8rj8whe8ozhebb9rf44nowraig4zhdwaaf5z8fqg1hm93mb48g6rxez8is";
+
+            let monto = document.getElementById("input-monto").value;
+            let factura = document.getElementById("input-factura").value;
+            let detalle = document.getElementById("input-detalle").value;
+
+            let parts = monto.toString().split(".");
+            let raw = parts[0] + parts[1].padEnd(30, "0"); // 1 nano = 10e30 raw
+
+            // pattern="\d+(?:\.\d{1,6})*"
+
+            let typeNumber = 0;
+            let errorCorrectionLevel = "L";
+            let qr = qrcode(typeNumber, errorCorrectionLevel);
+
+            let data = "nano:" + direccion + "?amount=" + raw;
+            console.log("data=" + data);
+            qr.addData(data);
+            qr.make();
+
+            document.getElementById("qr").innerHTML = qr.createImgTag(10);
+
+            
+
+            return true;
+        }
+
+        let withAjaxGet = (url, callback) => withAjax("GET", url, callback, null);
+        let withAjaxPost = (url, callback, data) => withAjax("POST", url, callback, data);
+
+        function withAjax(op, url, callback, data = null) {
+            var xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
+                    if (xhr.status == 200) {
+                        callback(xhr.responseText);
+                    }
+                    else if (xhr.status == 400) {
+                        alert('There was an error 400');
+                    }
+                    else {
+                        alert('something else other than 200 was returned');
+                    }
+                }
+            }
+
+            xhr.open(op, url, true);
+            xhr.send(JSON.stringify(data));
+        }
+    </script>
+</head>
+<body>
+    <div>
+        <form onsubmit="event.preventDefault(); return generateQR();">
+            <input type="number" name="input-monto" id="input-monto"
+                placeholder="Monto" step="0.000001" min="0.000001"><br>
+            <input type="text" name="input-factura" id="input-factura"
+                placeholder="Factura"><br>
+            <input type="text" name="input-detalle" id="input-detalle"
+                placeholder="Detalle"><br>
+            <input type="submit" value="Generar QR">
+        </form>
+    </div>
+    <div id="qr">
+    </div>
+</body>
+</html>
